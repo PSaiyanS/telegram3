@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebApp Invoice</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f8ff; /* Background light blue */
+            color: #333;
+            margin: 0;
+            padding: 0;
+            text-align: center;
+        }
+        #user-info {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: #e0f7fa; /* Light cyan */
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        #balance {
+            margin-top: 20px;
+            font-size: 24px;
+            color: #00796b; /* Teal */
+            font-weight: bold;
+        }
+        #buy-button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 18px;
+            color: #fff;
+            background-color: #0288d1; /* Blue */
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        #buy-button:hover {
+            background-color: #0277bd; /* Darker blue */
+        }
+        #name, #user-id {
+            font-size: 18px;
+            color: #01579b; /* Darker blue */
+        }
+    </style>
+</head>
+<body>
+    <div id="user-info">
+        <p id="name">Tên: </p>
+        <p id="user-id">ID: </p>
+        <p id="balance">Balance: </p>
+    </div>
+    <button id="buy-button">Mua 1 Telegram Star</button>
+    
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script>
+        const buyButton = document.getElementById('buy-button');
+        const balanceDiv = document.getElementById('balance');
+        const nameP = document.getElementById('name');
+        const userIdP = document.getElementById('user-id');
+
+        // Hiển thị tên và ID người dùng
+        nameP.textContent = "Tên: " + Telegram.WebApp.initDataUnsafe.user.first_name;
+        userIdP.textContent = "ID: " + Telegram.WebApp.initDataUnsafe.user.id;
+        buyButton.addEventListener('click', () => {
+            fetch('/create-invoice', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    amount: 1, // Giá trị 1 USD tương đương với 1 Telegram Star
+                    user_id: Telegram.WebApp.initDataUnsafe.user.id
+                }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                Telegram.WebApp.openInvoice(data.invoiceUrl);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        });
+
+        // Cập nhật số dư
+        function updateBalance() {
+            fetch(`/get-balance?user_id=${Telegram.WebApp.initDataUnsafe.user.id}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                balanceDiv.textContent = `Balance: ${data.balance} Stars`;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+        updateBalance();
+        // Gọi updateBalance khi tải trang
+        document.addEventListener('DOMContentLoaded', updateBalance);
+    </script>
+</body>
+</html>
